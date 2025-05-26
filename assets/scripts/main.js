@@ -2,12 +2,12 @@
 
 // CONSTANTS
 const RECIPE_URLS = [
-    'https://adarsh249.github.io/Lab8-Starter/recipes/1_50-thanksgiving-side-dishes.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/2_roasting-turkey-breast-with-stuffing.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/3_moms-cornbread-stuffing.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/4_50-indulgent-thanksgiving-side-dishes-for-any-holiday-gathering.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/5_healthy-thanksgiving-recipe-crockpot-turkey-breast.json',
-    'https://adarsh249.github.io/Lab8-Starter/recipes/6_one-pot-thanksgiving-dinner.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/1_50-thanksgiving-side-dishes.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/2_roasting-turkey-breast-with-stuffing.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/3_moms-cornbread-stuffing.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/4_50-indulgent-thanksgiving-side-dishes-for-any-holiday-gathering.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/5_healthy-thanksgiving-recipe-crockpot-turkey-breast.json',
+  'https://adarsh249.github.io/Lab8-Starter/recipes/6_one-pot-thanksgiving-dinner.json',
 ];
 
 // Run the init() function when the page has loaded
@@ -54,6 +54,18 @@ function initializeServiceWorker() {
   // B5. TODO - In the event that the service worker registration fails, console
   //            log that it has failed.
   // STEPS B6 ONWARDS WILL BE IN /sw.js
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((workerRegistration) => {
+          console.log('Service Worker registered successfully:', workerRegistration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
 }
 
 /**
@@ -100,30 +112,52 @@ async function getRecipes() {
   //            resolve() method.
   // A10. TODO - Log any errors from catch using console.error
   // A11. TODO - Pass any errors to the Promise's reject() function
-}
+  const localStorageRecipes = localStorage.getItem('recipes');
+  if (localStorageRecipes) {
+    return JSON.parse(localStorageRecipes);
+  }
 
-/**
- * Takes in an array of recipes, converts it to a string, and then
- * saves that string to 'recipes' in localStorage
- * @param {Array<Object>} recipes An array of recipes
- */
-function saveRecipesToStorage(recipes) {
-  localStorage.setItem('recipes', JSON.stringify(recipes));
-}
-
-/**
- * Takes in an array of recipes and for each recipe creates a
- * new <recipe-card> element, adds the recipe data to that card
- * using element.data = {...}, and then appends that new recipe
- * to <main>
- * @param {Array<Object>} recipes An array of recipes
- */
-function addRecipesToDocument(recipes) {
-  if (!recipes) return;
-  let main = document.querySelector('main');
-  recipes.forEach((recipe) => {
-    let recipeCard = document.createElement('recipe-card');
-    recipeCard.data = recipe;
-    main.append(recipeCard);
+  const recipesArray = [];
+  return new Promise(async (resolve, reject) => {
+    for (let url of RECIPE_URLS) {
+      try {
+        const response = await fetch(url);
+        const recipe = await response.json();
+        recipesArray.push(recipe);
+        if (recipesArray.length === RECIPE_URLS.length) {
+          saveRecipesToStorage(recipesArray);
+          resolve(recipesArray);
+        }
+      } catch (error) {
+        console.error('Error fetching recipe:', error);
+        reject(error);
+      }
+    }
   });
 }
+
+    /**
+     * Takes in an array of recipes, converts it to a string, and then
+     * saves that string to 'recipes' in localStorage
+     * @param {Array<Object>} recipes An array of recipes
+     */
+    function saveRecipesToStorage(recipes) {
+      localStorage.setItem('recipes', JSON.stringify(recipes));
+    }
+
+    /**
+     * Takes in an array of recipes and for each recipe creates a
+     * new <recipe-card> element, adds the recipe data to that card
+     * using element.data = {...}, and then appends that new recipe
+     * to <main>
+     * @param {Array<Object>} recipes An array of recipes
+     */
+    function addRecipesToDocument(recipes) {
+      if (!recipes) return;
+      let main = document.querySelector('main');
+      recipes.forEach((recipe) => {
+        let recipeCard = document.createElement('recipe-card');
+        recipeCard.data = recipe;
+        main.append(recipeCard);
+      });
+    }
