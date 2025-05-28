@@ -2,7 +2,7 @@
   "name": "Lab8_Starter",
   "short_name": "Akhil Subbarao",
   "description": "My Lab 8 for CSE110 to learn about Progressive Web Apps",
-  "start_url": ".",
+  "start_url": "/Lab8_Starter/",
   "display": "standalone",
   "background_color": "black",
   "theme_color": "blue",
